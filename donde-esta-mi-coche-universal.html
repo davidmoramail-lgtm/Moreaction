@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dónde está mi coche</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #FFFFFF;
+      font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #mainButton {
+      background-color: #007AFF;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 12px;
+      padding: 20px 40px;
+      font-size: 18px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    #mainButton:hover {
+      background-color: #005BBB;
+    }
+  </style>
+</head>
+<body>
+  <button id="mainButton">Recordar mi posición</button>
+
+  <script>
+    const button = document.getElementById("mainButton");
+
+    // Comprobar si ya existe ubicación guardada al cargar
+    if (localStorage.getItem("car_lat") && localStorage.getItem("car_lng")) {
+      button.textContent = "Ir a mi coche";
+    }
+
+    button.addEventListener("click", () => {
+      if (button.textContent === "Recordar mi posición") {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const lat = position.coords.latitude;
+              const lng = position.coords.longitude;
+              localStorage.setItem("car_lat", lat);
+              localStorage.setItem("car_lng", lng);
+              button.textContent = "Ir a mi coche";
+              alert("Ubicación guardada con éxito");
+            },
+            () => {
+              alert("Error al obtener la ubicación");
+            },
+            { enableHighAccuracy: true }
+          );
+        } else {
+          alert("La geolocalización no es compatible en este navegador.");
+        }
+      } else {
+        const lat = localStorage.getItem("car_lat");
+        const lng = localStorage.getItem("car_lng");
+
+        if (!lat || !lng) {
+          alert("No hay posición guardada.");
+          return;
+        }
+
+        // Detectar iOS
+        const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        let mapsUrl = "";
+
+        if (iOS) {
+          // Apple Maps en iOS
+          mapsUrl = `http://maps.apple.com/?daddr=${lat},${lng}`;
+        } else {
+          // Google Maps universal (funciona en Chrome, Edge, Firefox, Safari en desktop y Android)
+          mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+        }
+
+        // Abrir mapas
+        window.location.href = mapsUrl;
+
+        // Reiniciar al estado inicial
+        localStorage.removeItem("car_lat");
+        localStorage.removeItem("car_lng");
+        button.textContent = "Recordar mi posición";
+      }
+    });
+  </script>
+</body>
+</html>
